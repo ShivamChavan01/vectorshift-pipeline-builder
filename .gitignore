@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# root stub only — the real lockfile lives in frontend/ and is committed
+/package-lock.json
+
+# builds
+frontend/build/
+backend/__pycache__/
+*.pyc
+
+# env
+.env
+.env.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# local tooling
+.gstack/
