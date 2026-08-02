@@ -106,3 +106,33 @@
 ## TODO / In Flight
 
 - ~~`2026-08-02 | Round-2 feature batch: guards, handle labels, stats/reset, auto-save, backend depth`~~
+
+---
+
+## Session 2026-08-02 (part 3) — Export / Import JSON (scoped, low-risk)
+
+## Decisions
+
+- `2026-08-02 | Scope | User scoped this session to ONLY client-side Export/Import JSON + backend pytest suite: "do not scope-creep... if at any point this risks breaking existing functionality, STOP and report." No undo/redo, no auto-layout, no execution engine. Only touched store.js, toolbar.js, new src/lib/exportImport.js; left ui.js/BaseNode.js/registry.js/submit.js/ResultModal.jsx/SelectionBar.jsx/backend/main.py untouched. | Execution engine (real LLM/API) explicitly deferred — assessment rubric doesn't require it`
+- `2026-08-02 | Export | serializes {nodes, edges, nodeIDs} pretty (2-space) and downloads via Blob + temp <a>; filename vectorshift-pipeline-<timestamp>.json; purely client-side, no backend` | Reuses existing store state read-only via selector
+- `2026-08-02 | Import | hidden <input type="file" accept=".json,application/json"> triggered by Import button; FileReader -> JSON.parse -> validatePipeline (new) -> store.importPipeline(data). Validation runs fully BEFORE touching canvas; any failure shows .canvas-notice toast and leaves canvas unchanged. nodes/edges keys REQUIRED; nodeIDs optional (default {}).` | Validated every node (id/type/position.x/.y/data) and every edge (id/source/target) before applying. Selection flags stripped using the SAME helper loadPersisted uses (no duplication)
+- `2026-08-02 | Validation gotcha | validatePipeline initially destructured nodes = parsed.nodes ?? [] so a file with missing nodes/edges silently defaulted to [] and CLEARED the canvas. Fixed: check 'nodes' in parsed and 'edges' in parsed, reject otherwise. | Production rule: never default-arr black-hole a required key to []`
+- `2026-08-02 | Persistence | Import relies on existing useStore.subscribe auto-save (vs-pipeline-v1) — NO second persistence path was added. resetCanvas + import share the store's wholesale set({nodes, edges, nodeIDs}).`
+
+## Progress Log
+
+- `2026-08-02 | src/lib/exportImport.js | New | serializePipeline({nodes,edges,nodeIDs}) -> pretty JSON string; validatePipeline(parsed) -> {ok:true,nodes,edges,nodeIDs} (strips selected) or {ok:false,error} (rejects missing nodes/edges keys, non-arrays, bad node fields incl. missing position, bad edge fields); downloadPipeline(json, filename) -> Blob + temp <a> + revokeObjectURL.`
+- `2026-08-02 | store.js | Modified | Added exported stripSelection(items) helper (refactored out of loadPersisted so import reuses the exact same stripping); added importPipeline({nodes,edges,nodeIDs}) action that wholesale-replaces state. No other store actions changed.`
+- `2026-08-02 | toolbar.js | Modified | Two ghost buttons in the right cluster (Export disabled when empty / Import always enabled) + hidden file input + transient .canvas-notice toast (local useState/useRef, same pattern as ui.js isValidConnection, position:fixed top-14 so it overlays the canvas without touching ui.js). nodeCount/edgeCount now derived from the store nodes/edges selectors instead of bespoke state fields. lucide-react Download/Upload icons added.`
+- `2026-08-02 | QA | New suites: /tmp/qa4-exportimport.cjs 23/23 passing (toolbar buttons, export disabled when empty, drop 3 nodes, mouse-connect 1 edge, export download + filename pattern, export JSON shape, reset, import restores 3 nodes/1 edge with NO selected flags, malformed {"foo":"bar"} rejected with canvas unchanged, array payload [1,2,3] rejected, node-missing-position rejected, persistence survives reload, zero console errors). | Found & fixed the missing-keys clears-canvas bug via this suite. Regression rebuilt (old /tmp/qa2.cjs + /tmp/qa3.cjs were wiped by tmp cleanup) -> recreated /tmp/qa-regression.cjs 11/11 covering llm handle labels, minimap per-type color, duplicate-edge notice, stats badge, submit-DAG modal open+close, selection bar, per-node x delete (node + edges), zero console errors. Build: npm run build (plain, not CI) compiles clean (only the pre-existing CRA babel-optional-deps warning).`
+
+## Learnings / Gotchas
+
+- `2026-08-02 | playwright | Download.path() returns a Promise in recent Playwright — must await it before fs.readFileSync. First QA attempt read the promise -> "Received an instance of Promise" and silently fell back to the inline fixture, which caused a false "import restores edges" failure.`
+- `2026-08-02 | playwright | Reusing the app's HTML5 drag-and-drop in QA needs dispatchEvent(new DragEvent('dragover'/'drop', {dataTransfer, clientX, clientY})) on .react-flow; mouse-only drag from the toolbar chip doesn't move dataTransfer, so nodes weren't dropped by plain page.mouse drag.`
+- `2026-08-02 | modal | shadcn Dialog does NOT close on Escape in this Radix setup (no onKeyDown). Playwright must click the explicit "Done"/"Close" button; an Escape-key loop left the dialog open and the next canvas click landed on the overlay (broke selection-bar checks).`
+- `2026-08-02 | scope | Keep this session's footprint tiny: only 3 files (store.js open action, toolbar.js 2 buttons, lib/exportImport.js). This is the pattern for "don't regress, don't expand."`
+
+## TODO / In Flight
+
+- ~~`2026-08-02 | Export / Import JSON (store action + 2 toolbar buttons + lib helper)`, meanwhile: manually verified export->reset->import restores nodes/edges/positions without selection; malformed files rejected with toast, canvas untouched.~~`

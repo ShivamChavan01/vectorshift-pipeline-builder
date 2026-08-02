@@ -10,19 +10,19 @@ import {
 
 const STORAGE_KEY = 'vs-pipeline-v1';
 
-// restore a previously saved pipeline (nodes/edges/nodeIDs) from localStorage
+// strip transient selection flags so nothing is selected after reload/import
+export const stripSelection = (items) => items.map(({ selected, ...rest }) => rest);
+
+// restore a previous persisted pipeline (localStorage/nodes/edges/nodeIDs)
 const loadPersisted = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) return null;
-    // strip transient selection flags so nothing is selected after reload
-    const strip = (items) =>
-      items.map(({ selected, ...rest }) => rest);
     return {
-      nodes: strip(parsed.nodes),
-      edges: strip(parsed.edges),
+      nodes: stripSelection(parsed.nodes),
+      edges: stripSelection(parsed.edges),
       nodeIDs: parsed.nodeIDs && typeof parsed.nodeIDs === 'object' ? parsed.nodeIDs : {},
     };
   } catch {
@@ -103,6 +103,10 @@ export const useStore = create((set, get) => ({
     },
     resetCanvas: () => {
       set({ nodes: [], edges: [] });
+    },
+    // wholesale replace (not a merge) — validation happens before this is called
+    importPipeline: ({ nodes, edges, nodeIDs }) => {
+      set({ nodes, edges, nodeIDs });
     },
   }));
 
