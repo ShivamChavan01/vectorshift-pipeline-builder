@@ -149,4 +149,17 @@
 
 ## Progress Log
 
-- `2026-09-07 | Sanitize | Complete | .gitignore += *.mp4/*.zip/DS_Store; git rm --cached DS_Store; CONTEXT.md local-path sanitized; verified git check-ignore for mp4/zip/DS_Store; verified no ~ or email in tracked working tree (history still has them by design).``
+- `2026-09-07 | Sanitize | Complete | .gitignore += *.mp4/*.zip/DS_Store; git rm --cached DS_Store; CONTEXT.md local-path sanitized; verified git check-ignore for mp4/zip/DS_Store; verified no ~ or email in tracked working tree (history still has them by design).`
+
+---
+
+## Session 2026-09-07 — History rewrite (supersedes History note above)
+
+## Decisions
+
+- `2026-09-07 | Rewrite | User asked to rewrite history. Ran git filter-branch over all refs: author/committer shivam <personal gmail> -> ShivamChavan01 <noreply github email>; purged DS_Store from every commit; scrubbed local home-directory path + personal email string from all CONTEXT.md versions. Set repo-local git config user to the noreply identity so future commits stay clean. | Old History-note entry above is superseded — personal email is no longer in any reachable commit`
+- `2026-09-07 | Push | Force-pushed rewritten main to origin (public repo). Remote old commits become dangling; no collaborators/forks affected (personal repo). Local mp4/zip/DS_Store copies kept on disk, still gitignored.`
+
+## Progress Log
+
+- `2026-09-07 | Rewrite | Complete | Verified on rewritten main: 4 commits all noreply, git rev-list --all -- DS_Store empty, git log -p has zero personal-email hits, git grep /home path empty in all blobs.``
