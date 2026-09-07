@@ -38,7 +38,7 @@
 - `2026-08-01 | CI build | CI=true makes warnings fatal; run plain npm run build for dev check. The pre-existing exhaustive-deps warning in ui.js useCallback was fixed by adding stable store fns (getNodeID, addNode) to deps.`
 - `2026-08-01 | reactflow v11 | Node selection is skipped when the click lands on an input/textarea (isInputDOMNode check) — clicking a node's fields won't select it; click the header/card instead. This is stock ReactFlow UX, not a bug.`
 - `2026-08-01 | reactflow v11 | deleteKeyCode default is 'Backspace' only (not Delete). Handle ids are NOT rendered as DOM id attributes in v11 — they live on data-handleid (and data-id). Synthetic PointerEvent dispatches do NOT trigger ReactFlow connections (needs trusted input / setPointerCapture); use Playwright mouse events for QA.`
-- `2026-08-01 | testing | Playwright available at ~/.gstack/repos/gstack/node_modules/playwright (chromium headless shell installed in ~/.cache/ms-playwright). QA scripts: /tmp/qa.cjs (10-case suite), /tmp/qa-debug.cjs (selection debug). Screenshots: /tmp/qa-dag.png, /tmp/qa-final.png.`
+- `2026-08-01 | testing | Playwright available via local node_modules/playwright (chromium headless shell installed in ~/.cache/ms-playwright). QA scripts: /tmp/qa.cjs (10-case suite), /tmp/qa-debug.cjs (selection debug). Screenshots: /tmp/qa-dag.png, /tmp/qa-final.png.`
 
 ## TODO / In Flight
 
@@ -135,4 +135,18 @@
 
 ## TODO / In Flight
 
-- ~~`2026-08-02 | Export / Import JSON (store action + 2 toolbar buttons + lib helper)`, meanwhile: manually verified export->reset->import restores nodes/edges/positions without selection; malformed files rejected with toast, canvas untouched.~~`
+- ~~`2026-08-02 | Export / Import JSON (store action + 2 toolbar buttons + lib helper)`, meanwhile: manually verified export->reset->import restores nodes/edges/positions without selection; malformed files rejected with toast, canvas untouched.~~
+
+---
+
+## Session 2026-09-07 — Public-repo sanitization (user-requested append-only override)
+
+## Decisions
+
+- `2026-09-07 | Public prep | User asked to make repo public but keep call-recording/personal files local-only. Kept Shivam_Chavan_screenrecording.mp4 + Shivam_Chavan_technical_assessment.zip on disk, added *.mp4/*.zip/DS_Store to .gitignore so they never push. Removed tracked DS_Store via git rm --cached (local copy kept, now ignored). | Untracked personal files never push once ignored`
+- `2026-09-07 | Sensitive paths | Sanitized one ~ local path in 2026-08-01 testing entry to generic form (user explicitly requested sensitive-info removal; this intentionally overrides the append-only rule for that line) | No API keys/secrets found in tracked code; only local-path leak`
+- `2026-09-07 | History note | Git history (3 commits) still contains author shivam <[redacted-email]> + old versions of DS_Store/CONTEXT.md. Simple delete does NOT rewrite history. User chose to keep history; email will be visible on public GitHub. Full rewrite (filter-repo + force-push) deferred unless user asks.`
+
+## Progress Log
+
+- `2026-09-07 | Sanitize | Complete | .gitignore += *.mp4/*.zip/DS_Store; git rm --cached DS_Store; CONTEXT.md local-path sanitized; verified git check-ignore for mp4/zip/DS_Store; verified no ~ or email in tracked working tree (history still has them by design).``
